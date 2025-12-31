@@ -1,15 +1,15 @@
 // Imports
+use chrono::{DateTime, Utc};
 use rusqlite::{Connection, Statement, params};
-use chrono::{DateTime, Local};
 
 // Charge code definition
 #[derive(Debug, PartialEq)]
 pub struct ChargeCode {
     pub id: i64,
     pub code: String,
-    pub description: String,
-    pub open: DateTime<Local>,
-    pub close: Option<DateTime<Local>>,
+    pub details: String,
+    pub open: DateTime<Utc>,
+    pub close: Option<DateTime<Utc>>,
 }
 
 // Execute an SQL query and return a vector of charge codes
@@ -19,7 +19,7 @@ fn map_to_charge_codes(stmt: &mut Statement) -> rusqlite::Result<Vec<ChargeCode>
         Ok(ChargeCode {
             id: row.get("id")?,
             code: row.get("code")?,
-            description: row.get("description")?,
+            details: row.get("details")?,
             open: row.get("open")?,
             close: row.get("close")?,
         })
@@ -45,11 +45,20 @@ pub fn get_active_charge_codes(conn: &Connection) -> rusqlite::Result<Vec<Charge
     map_to_charge_codes(&mut stmt)
 }
 
+// Get charge code ID
+pub fn get_charge_code_id(conn: &Connection, code: &str) -> rusqlite::Result<i64> {
+    conn.query_one(
+        "SELECT id FROM charge_codes WHERE code = ? AND close IS NULL",
+        params![code],
+        |row| row.get("id"),
+    )
+}
+
 // Add charge code
-pub fn add_charge_code(conn: &Connection, code: &str, description: &str) -> rusqlite::Result<()> {
+pub fn add_charge_code(conn: &Connection, code: &str, details: &str) -> rusqlite::Result<()> {
     conn.execute(
-        "INSERT INTO charge_codes (code, description, open) VALUES (?, ?, ?)",
-        params![code, description, Local::now()],
+        "INSERT INTO charge_codes (code, details, open) VALUES (?, ?, ?)",
+        params![code, details, Utc::now()],
     )?;
     Ok(())
 }
@@ -58,7 +67,7 @@ pub fn add_charge_code(conn: &Connection, code: &str, description: &str) -> rusq
 pub fn close_charge_code(conn: &Connection, code: &str) -> rusqlite::Result<()> {
     conn.execute(
         "UPDATE charge_codes SET close = ? WHERE code = ? AND close IS NULL",
-        params![Local::now(), code],
+        params![Utc::now(), code],
     )?;
     Ok(())
 }
@@ -69,11 +78,15 @@ pub fn delete_charge_code(conn: &Connection, id: i64) -> rusqlite::Result<()> {
     Ok(())
 }
 
-// Update charge code
-pub fn update_charge_code(conn: &Connection, id: i64, description: &str) -> rusqlite::Result<()> {
+// Update charge code details
+pub fn update_charge_code_details(
+    conn: &Connection,
+    id: i64,
+    details: &str,
+) -> rusqlite::Result<()> {
     conn.execute(
-        "UPDATE charge_codes SET description = ? WHERE id = ?",
-        params![description, id],
+        "UPDATE charge_codes SET details = ? WHERE id = ?",
+        params![details, id],
     )?;
     Ok(())
 }

@@ -73,9 +73,8 @@ pub fn close_charge_code(conn: &Connection, code: &str) -> rusqlite::Result<()> 
 }
 
 // Delete charge code
-pub fn delete_charge_code(conn: &Connection, id: i64) -> rusqlite::Result<()> {
-    conn.execute("DELETE FROM charge_codes WHERE id = ?", params![id])?;
-    Ok(())
+pub fn delete_charge_code(conn: &Connection, id: i64) -> rusqlite::Result<usize> {
+    conn.execute("DELETE FROM charge_codes WHERE id = ?", params![id])
 }
 
 // Update charge code details
@@ -83,10 +82,9 @@ pub fn update_charge_code_details(
     conn: &Connection,
     id: i64,
     details: &str,
-) -> rusqlite::Result<()> {
+) -> rusqlite::Result<usize> {
     conn.execute(
         "UPDATE charge_codes SET details = ? WHERE id = ?",
         params![details, id],
-    )?;
-    Ok(())
+    )
 }

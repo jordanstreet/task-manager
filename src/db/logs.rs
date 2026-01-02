@@ -61,14 +61,14 @@ pub fn get_log_entries(
 pub fn add_log_entry(
     conn: &Connection,
     description: &str,
-    start: Option<DateTime<Utc>>,
+    start: DateTime<Utc>,
     stop: Option<DateTime<Utc>>,
-) -> rusqlite::Result<()> {
+) -> rusqlite::Result<i64> {
     conn.execute(
         "INSERT INTO logs (description, start, stop) VALUES (?, ?, ?)",
-        params![description, start.unwrap_or(Utc::now()), stop],
+        params![description, start, stop],
     )?;
-    Ok(())
+    Ok(conn.last_insert_rowid())
 }
 
 // Add charge code link
@@ -85,12 +85,11 @@ pub fn link_charge_code(
 }
 
 // Stop log
-pub fn stop_log(conn: &Connection) -> rusqlite::Result<()> {
+pub fn stop_log(conn: &Connection) -> rusqlite::Result<usize> {
     conn.execute(
         "UPDATE logs SET stop = ? WHERE stop IS NULL",
         params![Utc::now()],
-    )?;
-    Ok(())
+    )
 }
 
 // Delete log entry
@@ -106,10 +105,9 @@ pub fn update_log_entry(
     description: &str,
     start: DateTime<Utc>,
     stop: Option<DateTime<Utc>>,
-) -> rusqlite::Result<()> {
+) -> rusqlite::Result<usize> {
     conn.execute(
         "UPDATE logs SET description = ?, start = ?, stop = ? WHERE id = ?",
         params![description, start, stop, id],
-    )?;
-    Ok(())
+    )
 }

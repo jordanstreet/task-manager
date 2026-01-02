@@ -283,6 +283,7 @@ dependencies = [
  "chrono",
  "indexmap",
  "rusqlite",
+ "thiserror",
 ]
 
 [[package]]

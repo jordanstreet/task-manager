@@ -41,7 +41,7 @@ fn charge_codes() {
     add_charge_code(&conn, "CC1", "details 1").unwrap();
 
     // Update the CC2 details
-    update_charge_code_details(&conn, 2, "updated details 2").unwrap();
+    assert_eq!(update_charge_code_details(&conn, 2, "updated details 2").unwrap(), 1);
 
     // There should be 3 total charge codes and 2 active
     let active_codes = get_active_charge_codes(&conn).unwrap();
@@ -81,16 +81,16 @@ fn logs() {
     add_charge_code(&conn, "CC2", "details 2").unwrap();
 
     // Add a couple logs with charge codes
-    add_log_entry(
+    assert_eq!(add_log_entry(
         &conn,
         "task 1",
-        Some(create_date_time("10:00")),
+        create_date_time("10:00"),
         Some(create_date_time("11:00")),
     )
-    .unwrap();
+    .unwrap(), 1);
     link_charge_code(&conn, 1, 1).unwrap();
     link_charge_code(&conn, 1, 2).unwrap();
-    add_log_entry(&conn, "task 2", Some(create_date_time("11:30")), None).unwrap();
+    assert_eq!(add_log_entry(&conn, "task 2", create_date_time("11:30"), None).unwrap(), 2);
     link_charge_code(&conn, 2, 2).unwrap();
 
     // Helper function to retrieve logs within a specified window
@@ -114,8 +114,8 @@ fn logs() {
     assert_eq!(get_logs_between("09:00", "11:15").len(), 1);
 
     // Update the second log to start sooner and end
-    update_log_entry(&conn, 2, "task 2", create_date_time("11:05"), None).unwrap();
-    stop_log(&conn).unwrap();
+    assert_eq!(update_log_entry(&conn, 2, "task 2", create_date_time("11:05"), None).unwrap(), 1);
+    assert_eq!(stop_log(&conn).unwrap(), 1);
 
     // The same query should now return 2 logs, both with end times
     let logs2 = get_logs_between("09:00", "11:15");
@@ -137,13 +137,13 @@ fn charge_codes_logs() {
     add_charge_code(&conn, "CC1", "details 1").unwrap();
 
     // Add a log that depends on CC1
-    add_log_entry(
+    assert_eq!(add_log_entry(
         &conn,
         "task 1",
-        Some(create_date_time("09:00")),
+        create_date_time("09:00"),
         Some(create_date_time("10:00")),
     )
-    .unwrap();
+    .unwrap(), 1);
     link_charge_code(&conn, 1, 1).unwrap();
 
     // Close the existing CC1 and then add a newer version
@@ -162,5 +162,5 @@ fn charge_codes_logs() {
 
     // Remove the log that depends on the old CC1 and delete the old CC1
     delete_log_entry(&conn, 1).unwrap();
-    delete_charge_code(&conn, 1).unwrap();
+    assert_eq!(delete_charge_code(&conn, 1).unwrap(), 1);
 }

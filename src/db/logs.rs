@@ -66,7 +66,7 @@ pub fn get_log_entries(
         LEFT JOIN log_charge_codes lcc ON l.id = lcc.log_id
         LEFT JOIN charge_codes cc ON cc.id = lcc.charge_code_id
         WHERE start < ?2 AND COALESCE(stop, ?2) > ?1
-        ORDER BY id
+        ORDER BY start
         ",
     )?;
 

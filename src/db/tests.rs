@@ -1,16 +1,7 @@
 // Imports
+use crate::db::test_utils::*;
 use crate::db::{charge_codes::*, logs::*};
-use chrono::{DateTime, NaiveDate, NaiveTime, TimeZone, Utc};
-use rusqlite::{Connection, Error, ErrorCode};
-
-// Create an in-memory test DB
-fn setup() -> Connection {
-    let conn = Connection::open_in_memory().unwrap();
-    conn.execute("PRAGMA foreign_keys = ON;", []).unwrap();
-    conn.execute_batch(include_str!("create_tables.sql"))
-        .unwrap();
-    conn
-}
+use rusqlite::{Error, ErrorCode};
 
 // Charge code behavior
 #[test]
@@ -78,15 +69,6 @@ fn charge_codes() {
         get_charge_code(&conn, 4).unwrap_err(),
         Error::QueryReturnedNoRows
     );
-}
-
-// Helper function to create a DateTime
-fn create_date_time(str: &str) -> DateTime<Utc> {
-    let time = NaiveTime::parse_from_str(str, "%H:%M").unwrap();
-    let date_time = NaiveDate::from_ymd_opt(2025, 01, 01)
-        .unwrap()
-        .and_time(time);
-    Utc.from_utc_datetime(&date_time)
 }
 
 // Log behavior

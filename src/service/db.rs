@@ -216,7 +216,11 @@ impl Database {
                 update_log_entry(&self.conn, log.id, &log.description, log_start, Some(start))?;
                 let new_id = add_log_entry(&self.conn, &log.description, stop, log.stop)?;
                 for code in log.charge_codes {
-                    link_charge_code(&self.conn, new_id, get_active_charge_code_id(&self.conn, &code)?)?;
+                    link_charge_code(
+                        &self.conn,
+                        new_id,
+                        get_active_charge_code_id(&self.conn, &code)?,
+                    )?;
                 }
             } else if log_start < start && log_stop > start {
                 // Trim logs that started before and ended within

@@ -105,7 +105,10 @@ fn logs() {
     .unwrap();
 
     // Retrieve logs
-    let get_logs = || db.get_log_entries(create_date_time("01:00"), create_date_time("12:00")).unwrap();
+    let get_logs = || {
+        db.get_log_entries(create_date_time("01:00"), create_date_time("12:00"))
+            .unwrap()
+    };
     let mut logs = get_logs();
     assert_eq!(logs.len(), 2);
 
@@ -235,11 +238,18 @@ fn logs() {
     assert_eq!(logs.len(), 1);
 
     // Inserting within a log should split it
-    db.add_log_entry("task 5", vec![String::from("CC2")], Some(create_date_time("09:00")), Some(create_date_time("11:00"))).unwrap();
+    db.add_log_entry(
+        "task 5",
+        vec![String::from("CC2")],
+        Some(create_date_time("09:00")),
+        Some(create_date_time("11:00")),
+    )
+    .unwrap();
     logs = get_logs();
     assert_eq!(logs.len(), 3);
     assert_eq!(logs[0].description, "task 4");
     assert_eq!(logs[0].charge_codes, vec![String::from("CC")]);
+    assert_eq!(logs[0].start, create_date_time("08:30"));
     assert_eq!(logs[0].stop.unwrap(), create_date_time("09:00"));
     assert_eq!(logs[1].description, "task 5");
     assert_eq!(logs[1].charge_codes, vec![String::from("CC2")]);
@@ -248,8 +258,39 @@ fn logs() {
     assert_eq!(logs[2].description, "task 4");
     assert_eq!(logs[2].charge_codes, vec![String::from("CC")]);
     assert_eq!(logs[2].start, create_date_time("11:00"));
+    assert_eq!(logs[2].stop.unwrap(), create_date_time("11:30"));
 
-    // TODO: Trim logs that started before and ended within
+    // Adding a log before that ended within should trim the existing log start time
+    db.add_log_entry(
+        "task 6",
+        vec![String::from("CC")],
+        Some(create_date_time("08:00")),
+        Some(create_date_time("08:45")),
+    )
+    .unwrap();
+    logs = get_logs();
+    assert_eq!(logs.len(), 4);
+    assert_eq!(logs[0].description, "task 6");
+    assert_eq!(logs[0].start, create_date_time("08:00"));
+    assert_eq!(logs[0].stop.unwrap(), create_date_time("08:45"));
+    assert_eq!(logs[1].description, "task 4");
+    assert_eq!(logs[1].start, create_date_time("08:45"));
+    assert_eq!(logs[1].stop.unwrap(), create_date_time("09:00"));
 
-    // TODO: Trim logs that started within and ended after
+    // Adding a log after that started within should trim the existing log stop time
+    db.add_log_entry(
+        "task 7",
+        vec![String::from("CC")],
+        Some(create_date_time("11:15")),
+        Some(create_date_time("11:45")),
+    )
+    .unwrap();
+    logs = get_logs();
+    assert_eq!(logs.len(), 5);
+    assert_eq!(logs[3].description, "task 4");
+    assert_eq!(logs[3].start, create_date_time("11:00"));
+    assert_eq!(logs[3].stop.unwrap(), create_date_time("11:15"));
+    assert_eq!(logs[4].description, "task 7");
+    assert_eq!(logs[4].start, create_date_time("11:15"));
+    assert_eq!(logs[4].stop.unwrap(), create_date_time("11:45"));
 }

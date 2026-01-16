@@ -124,6 +124,11 @@ impl Database {
         }
     }
 
+    // Close charge code
+    pub fn close_charge_code(&self, code: &str) -> Result<()> {
+        Ok(close_charge_code(&self.conn, code)?)
+    }
+
     // Get log entry by ID
     pub fn get_log_entry(&self, id: i64) -> Result<LogEntry> {
         let entry = get_log_entry(&self.conn, id).map_err(|err| match err {

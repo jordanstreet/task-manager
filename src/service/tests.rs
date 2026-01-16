@@ -56,6 +56,10 @@ fn charge_codes() {
         DBError::UnknownChargeCodeId(4)
     );
 
+    // Close a charge code (now there should only be 1 active)
+    db.close_charge_code("CC2").unwrap();
+    assert_eq!(db.get_charge_codes(true).unwrap().len(), 1);
+
     // Delete a charge code
     db.delete_charge_code(1).unwrap();
     assert_eq!(
